@@ -1,10 +1,20 @@
+//#include "FamilyTree.hpp"
+//#include <iostream>
+//#include <string>
+//
+//
+//
+//using namespace std;
+//using namespace family;
 #include "FamilyTree.hpp"
-#include <iostream>
 #include <string>
-
+#include <stdexcept>
+#include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace family;
+
 
 Tree::Tree(string name) {
     this->MyName = name;
@@ -15,37 +25,54 @@ Tree::Tree(string name) {
     this->rel = "";
     this->found=false;
 }
-
-Tree Tree::curr(Tree *now, string name) {
-    Tree temp = *now;
-    if (now->MyName == name) {
-        this->key = 1;
-        return temp;
-
+// Tree::~Tree()
+// {
+//     if()
+//     delete this->Father;
+//     delete this->Mother;
+//    // cout << "ETEDE";
+// }
+Tree *Tree::curr(Tree *where, string who) {
+    if (where == NULL)
+    {
+        return NULL;
     }
-    if (now->Mother != NULL && now->MyName != name && this->key != 1) {
-        temp = curr(now->Mother, name);
+    if (who.compare(where->MyName) == 0)
+    {
+        return where;
     }
-    if (now->Father != NULL && now->MyName != name && this->key != 1) {
-        temp = curr(now->Father, name);
+    else
+    {
+        Tree *f = curr(where->Father, who);
+        if (f != NULL)
+        {
+            return f;
+        }
+        Tree *m = curr(where->Mother, who);
+        if (m != NULL)
+        {
+            return m;
+        }
     }
-
-    if (temp.MyName == name)
-        return temp;
+    return NULL;
 
 }
 
-Tree Tree::addFather(string name, string father) {
+Tree &Tree::addFather(string name, string father) {
 
     Tree *temp = this;
-    Tree temp2 = curr(temp, name);
+    Tree *temp2 = curr(this, name);
+    if(temp2 == NULL)
+    {
+         throw std::invalid_argument(name + " doesnt exist\n");
+    }
     this->key = 0;
-    if (temp2.MyName == name) {
-        if (temp2.Father == NULL) {
-            temp2.Father = new Tree(father);
-            temp2.Father->MyName = father;
+    if (temp2->MyName.compare(name) == 0) {
+        if (temp2->Father == NULL) {
+            temp2->Father = new Tree(father);
+            temp2->Father->MyName = father;
 
-            string temp3 = curr2(temp, name, "");
+            string temp3 = curr2(this, name, "");
             this->key = 0;
             int i = 0;
             while (temp->MyName != name) {
@@ -60,7 +87,7 @@ Tree Tree::addFather(string name, string father) {
 
             }
 
-            temp2.Father->depth = i + 1;
+            temp2->Father->depth = i + 1;
             int r = i + 1;
 
 
@@ -69,10 +96,10 @@ Tree Tree::addFather(string name, string father) {
 
             } else if (r == 1) {
 
-                temp2.Father->rel = "father";
+                temp2->Father->rel = "father";
             } else if (r == 2) {
 
-                temp2.Father->rel = "grandfather";
+                temp2->Father->rel = "grandfather";
             } else if (r > 2) {
                 string times = "";
                 int k = 2;
@@ -80,9 +107,9 @@ Tree Tree::addFather(string name, string father) {
                     times = times + "great-";
                     k++;
                 }
-                temp2.Father->rel = times + "grandfather";
+                temp2->Father->rel = times + "grandfather";
             }
-            temp->Father = temp2.Father;
+            temp->Father = temp2->Father;
         }
         else {
             //  cout << name + " has father\n";
@@ -99,14 +126,18 @@ Tree Tree::addFather(string name, string father) {
 
 }
 
-Tree Tree::addMother(string name, string mother) {
+Tree &Tree::addMother(string name, string mother) {
     Tree *temp = this;
-    Tree temp4 = curr(temp, name);
+    Tree *temp4 = curr(temp, name);
+     if(temp4 == NULL)
+    {
+         throw std::invalid_argument(name + " doesnt exist\n");
+    }
     this->key = 0;
-    if (temp4.MyName == name) {
-        if (temp4.Mother == NULL) {
-            temp4.Mother = new Tree(mother);
-            temp4.Mother->MyName = mother;
+    if (temp4->MyName == name) {
+        if (temp4->Mother == NULL) {
+            temp4->Mother = new Tree(mother);
+            temp4->Mother->MyName = mother;
 
             string temp3 = curr2(temp, name, "");
             this->key = 0;
@@ -123,7 +154,7 @@ Tree Tree::addMother(string name, string mother) {
 
             }
 
-            temp4.Mother->depth = i + 1;
+            temp4->Mother->depth = i + 1;
             int r = i + 1;
 
 
@@ -132,10 +163,10 @@ Tree Tree::addMother(string name, string mother) {
 
             } else if (r == 1) {
 
-                temp4.Mother->rel = "mother";
+                temp4->Mother->rel = "mother";
             } else if (r == 2) {
 
-                temp4.Mother->rel = "grandmother";
+                temp4->Mother->rel = "grandmother";
             } else if (r > 2) {
                 string times = "";
                 int k = 2;
@@ -143,9 +174,9 @@ Tree Tree::addMother(string name, string mother) {
                     times = times + "great-";
                     k++;
                 }
-                temp4.Mother->rel = times + "grandmother";
+                temp4->Mother->rel = times + "grandmother";
             }
-            temp->Mother = temp4.Mother;
+            temp->Mother = temp4->Mother;
         }
         else {
 
@@ -165,72 +196,77 @@ Tree Tree::addMother(string name, string mother) {
 string Tree::relation(string name) {
     // this->key=0;
     // cout << name +" is ";
-
+    if(this->MyName.compare(name)==0)
+    {
+        return "me";
+    }
     Tree *temp = this;
-    Tree temp2 = curr(temp, name);
-    if(temp2.MyName != name)
+    Tree *temp2 = curr(temp, name);
+    if(temp2 == NULL)
     {
-        cout << name + " not found\n";
-        return "not found";
+       // throw std::invalid_argument(name + " doesnt exist\n");
+        return "unrelated";
     }
     this->key = 0;
     this->found = false;
+    return temp2->rel;
     //cout << temp2.MyName << " is: " << temp2.depth << "\n";
-    string temp3 = curr2(temp, name, "");
-    this->key = 0;
-    this->found = false;
+    // string temp3 = curr2(temp, name, "");
+    // this->key = 0;
+    // this->found = false;
+
     //cout << temp3;
-    int i = 2;
-    int r = 0;
-    r = temp2.depth;
-    if (r == 0) {
-        cout << name + " it's me\n";
-        return name;
+    // int i = 2;
+    // int r = 0;
+    // r = temp2->depth;
+    // if (r == 0) {
+    //     cout << name + " it's me\n";
+    //     return name;
 
 
-    } else if (r == 1) {
-        if (temp3[0] == 'm') {
-            cout << name + " it's the mother of  " + temp->MyName+"\n";
-            return "mother";
+    // } else if (r == 1) {
+    //     if (temp3[0] == 'm') {
+    //         cout << name + " it's the mother of  " + temp->MyName+"\n";
+    //         return "mother";
 
-        } else {
-            cout << name + " it's the father of  " + temp->MyName+"\n";
-            return "father";
+    //     } else {
+    //         cout << name + " it's the father of  " + temp->MyName+"\n";
+    //         return "father";
 
-        }
-    } else if (r == 2) {
-        if (temp3[1] == 'm') {
-            cout << name + " it's the grandmother of  " + temp->MyName+"\n";
-            return "grandmother";
-        } else {
-            cout << name + " it's the grandfather of  " + temp->MyName+"\n";
-            return "grandfather";
+    //     }
+    // } else if (r == 2) {
+    //     if (temp3[1] == 'm') {
+    //         cout << name + " it's the grandmother of  " + temp->MyName+"\n";
+    //         return "grandmother";
+    //     } else {
+    //         cout << name + " it's the grandfather of  " + temp->MyName+"\n";
+    //         return "grandfather";
 
-        }
-    } else if (r > 2)
-    {
-        string times = "";
-        while(i<r)
-        {
-            times = times + "great-";
-            i++;
-        }
-        if (temp3[temp2.depth-1] == 'm') {
-            cout << name + " it's the "+ times +"grandmother of  " + temp->MyName+"\n";
-            return times + "grandmother";
-        } else {
-            cout << name + " it's the "+ times +"grandfather of  " + temp->MyName+"\n";
-            return times + "grandfather";
+    //     }
+    // } else if (r > 2)
+    // {
+    //     string times = "";
+    //     while(i<r)
+    //     {
+    //         times = times + "great-";
+    //         i++;
+    //     }
+    //     if (temp3[(temp2->depth)-1] == 'm') {
+    //         cout << name + " it's the "+ times +"grandmother of  " + temp->MyName+"\n";
+    //         return times + "grandmother";
+    //     } else {
+    //         cout << name + " it's the "+ times +"grandfather of  " + temp->MyName+"\n";
+    //         return times + "grandfather";
 
-        }
-    }
+    //     }
+    // }
 
 }
 ////////////////
 string Tree::find_helper(Tree *now, string name ) {
-    Tree temp = *now;
-    string n = temp.MyName;
-    if (now->rel == name) {
+    //Tree temp = *now;
+    string n = now->MyName;
+    if ((now->rel).compare(name) == 0) {
         this->key = 1;
         this->found = true;
         return n;
@@ -242,7 +278,7 @@ string Tree::find_helper(Tree *now, string name ) {
         n = find_helper(now->Father, name);
     }
 
-    if (temp.rel == name) {
+    if (now->rel == name) {
         this->found = true;
         return n;
     }
@@ -255,6 +291,7 @@ string Tree::find_helper(Tree *now, string name ) {
     {
         return "";
     }
+    return "";
 }
 /////////////////
 
@@ -263,7 +300,14 @@ string Tree::find(string rel) {
     string p = find_helper(this, rel);
     this->key=0;
     this->found=false;
-    if(p==""){cout << "\nnot found";}
+    if(p.compare("")==0)
+    {
+        //cout << "\nnot found";
+        //string test = "Could'nt find '" + rel + "'";
+       // throw invalid_argument("test");
+       throw runtime_error("asd");
+
+    }
     //cout << p;
     // delete &rel;
     return p;
@@ -311,9 +355,20 @@ void Tree::remove(string name) {
     Tree *temp = this;
     Tree *temp9 = this;
     int i = 0;
-//    Tree temp2 = curr(temp, name);
-    string temp2 = curr2(temp,name,"");
+    
 
+    // Tree temp2 = curr(temp, name);
+    this->key=0;
+    string temp2 = curr2(temp,name,"");
+  
+
+    if(temp2.length()==0 ||  this->MyName.compare(name)==0 )
+    {
+
+        throw std::invalid_argument(name + " cant delete\n");
+
+    }
+    else{
     while (temp->MyName != name) {
         if (temp2[i] == 'f') {
             temp = temp->Father;
@@ -335,31 +390,33 @@ void Tree::remove(string name) {
                 temp9 = temp9->Father;
                 i++;
             }
-            if (temp2[i] == 'm') {
+            else  {
                 temp9 = temp9->Mother;
                 i++;
             }
         }
     }
-
-
     //temp = &temp2;
-
     this->found = false;
     this->key = 0;
-
-       // delete temp;
-
-        del(temp);
-        delete temp;
-        if(temp2[i]=='f') temp9->Father= nullptr;
-        if(temp2[i]=='m') temp9->Father= nullptr;
+     // delete temp;
+       // del(temp);
+       // delete temp9;
+        if(temp2[i]=='f'){
+             delete temp9->Father;
+             temp9->Father = nullptr;
+        }
+        if(temp2[i]=='m')
+        { 
+            delete temp9->Mother;
+            temp9->Mother = nullptr;
+        }
 
 //cout<<"a";
+    } 
 
-
-
-
+    this->key=0;
+    this->found=false;
 }
 
 /**
@@ -381,17 +438,12 @@ void Tree::remove(string name) {
 
     if(temp.MyName==name)
         return temp;
-
- * @param now
- * @param name
- * @param ans
- * @return
- */
+        */
 
 string Tree::curr2(Tree *now, string name, string ans) {
-    Tree temp = *now;
+    //Tree temp = *now;
     string t = ans;
-    if (now->MyName == name) {
+    if (now->MyName.compare(name)==0) {
         this->key = 1;
         return t;
     }
@@ -405,5 +457,5 @@ string Tree::curr2(Tree *now, string name, string ans) {
     if (this->key == 1) {
         return t;
     }
-
+     return "";
 }
